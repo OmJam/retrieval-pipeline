@@ -116,11 +116,14 @@ handle these cases better, at the cost of more implementation complexity.
 **Actual chunk count produced across all 8 rule books:**
 
 ```
-[your answer here]
+149 chunks
 ```
 
 **One thing that surprised you or didn't match your expectations:**
 
 ```
-[your answer here]
+I thought there would be more chunks needed for these rules since there are 8 full rule books.
+The time it took to chunk these didn't take long. I can see that if we have more
+docs or make our chunk size smaller, our database would be much larger and take
+longer. 
 ```

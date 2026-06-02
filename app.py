@@ -8,6 +8,7 @@ from generator import generate_response
 # Ingestion — runs once on startup
 # ---------------------------------------------------------------------------
 
+
 def run_ingestion():
     """
     Load rule documents, chunk them, and store in ChromaDB.
@@ -19,7 +20,9 @@ def run_ingestion():
     collection = get_collection()
 
     if collection.count() > 0:
-        print(f"Vector store already populated ({collection.count()} chunks). Skipping ingestion.")
+        print(
+            f"Vector store already populated ({collection.count()} chunks). Skipping ingestion."
+        )
         print("To re-ingest, delete the ./chroma_db folder and restart.")
         return
 
@@ -45,6 +48,7 @@ def run_ingestion():
 # Chat handler
 # ---------------------------------------------------------------------------
 
+
 def chat(message, history):
     if not message.strip():
         return ""
@@ -61,7 +65,8 @@ with gr.Blocks(
     title="RulesBot",
 ) as demo:
 
-    gr.HTML("""
+    gr.HTML(
+        """
         <div style="text-align:center; padding:1.25rem 0 0.5rem;">
             <h1 style="font-size:2rem; font-weight:700; color:#312e81; margin:0;">
                 🎲 RulesBot
@@ -70,7 +75,8 @@ with gr.Blocks(
                 Ask anything about your board games — answers straight from the rulebook.
             </p>
         </div>
-    """)
+    """
+    )
 
     with gr.Row():
         with gr.Column(scale=3):
@@ -106,7 +112,8 @@ with gr.Blocks(
             )
 
         with gr.Column(scale=1, min_width=180):
-            gr.HTML("""
+            gr.HTML(
+                """
                 <div style="background:#f5f3ff; border:1px solid #ddd6fe;
                             border-radius:10px; padding:1rem; margin-top:0.5rem;">
                     <p style="font-size:0.8rem; font-weight:700; color:#4c1d95;
@@ -130,12 +137,13 @@ with gr.Blocks(
                         isn't in the books, RulesBot will say so.
                     </p>
                 </div>
-            """)
+            """
+            )
 
 
 if __name__ == "__main__":
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("  RulesBot — starting up")
-    print("="*50 + "\n")
+    print("=" * 50 + "\n")
     run_ingestion()
     demo.launch()

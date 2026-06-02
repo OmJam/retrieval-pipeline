@@ -55,7 +55,20 @@ Results should be ordered from most to least relevant (lowest to highest distanc
 *Sketch out what one item in your return list looks like as a concrete example. Where does each field come from in the query results?*
 
 ```
-[your answer here]
+Each item in the returned list is a plain dict with exactly three keys:
+
+{
+  "text":     "When a player rolls a 7, the robber must be moved...",
+  "game":     "Catan",
+  "distance": 0.12
+}
+
+- "text"     comes from results["documents"][0][i]
+- "game"     comes from results["metadatas"][0][i]["game"]
+- "distance" comes from results["distances"][0][i]
+
+Results arrive already sorted lowest-to-highest distance (most-to-least relevant)
+because that is ChromaDB's default ordering.
 ```
 
 ---
@@ -65,7 +78,18 @@ Results should be ordered from most to least relevant (lowest to highest distanc
 *`_collection.query()` returns nested lists. Describe what index you need to access to get the actual list of results for a single query, and why the nesting exists.*
 
 ```
-[your answer here]
+_collection.query() wraps every result list in an outer list — one inner list
+per query string in query_texts. Because we always pass exactly one query string,
+the actual list of matched chunks is always at index [0].
+
+Example:
+  raw["documents"]      →  [["chunk A", "chunk B", "chunk C"]]
+  raw["documents"][0]   →  ["chunk A", "chunk B", "chunk C"]   ← what we want
+
+So when building the return list, iterate over:
+  zip(results["documents"][0], results["metadatas"][0], results["distances"][0])
+— not over the top-level lists directly, or you'd be iterating over
+single-element wrapper lists instead of the actual results.
 ```
 
 ---
@@ -75,7 +99,19 @@ Results should be ordered from most to least relevant (lowest to highest distanc
 *Will you filter out results above a certain distance score, or return all `n_results` regardless of how relevant they are? What are the tradeoffs of each approach?*
 
 ```
-[your answer here]
+Return all n_results without filtering by distance threshold.
+
+Tradeoffs:
+- Simpler, always returns the same number of results,
+  and lets generate_response() decide how to use weak matches.
+  Works even when no chunk is a great match, but may cause hallucination
+  or wrong information. 
+- A hard threshold produces cleaner context but can silently return an empty 
+  list, which breaks the generator or produces confusing behavior. 
+  Requires careful tuning per dataset.
+
+For this project, returning all n_results and letting the LLM handle low-quality
+matches is the safer, simpler default.
 ```
 
 ---
@@ -97,14 +133,22 @@ Results should be ordered from most to least relevant (lowest to highest distanc
 **Test query and top result returned:**
 
 ```
-Query: [your test query]
-Top result game: [game name]
-Distance score: [score]
-Does it make sense? [yes / no / explain]
+Query: How does the Spymaster give clues in Codenames?
+Top result game: Codenames
+Distance score: 0.289
+Does it make sense? Yes — all three results came from Codenames and the distances
+were the lowest of any query tested (~0.289–0.351), showing that a targeted
+game-specific question retrieves tightly relevant chunks.
 ```
 
 **One thing about the query results that surprised you:**
 
 ```
-[your answer here]
+"What happens when you roll a 7?" returned Catan as the top result (dist: 0.466)
+but the second and third slots went to Risk — because those Risk chunks contain
+the words "dice" and "rolled". The 300-character chunks are small enough that
+some don't carry the game name or enough surrounding context to distinguish
+Catan's specific robber rule from a generic dice-rolling passage. A game-specific
+query that feels unambiguous to a human can still match fragments from the wrong
+game when the chunks are short and share vocabulary.
 ```
